@@ -12,7 +12,7 @@ class Twitter_Functions:
 
     #Function to like a set number of tweets based on a single hashtag
     #@params hashtag: the hashtag to search, rate_limit: the amount of tweets to like, print_tweets: print the liked tweets to the terminal
-    def like_tweet_from_hashtag(hashtag, rate_limit, print_tweets = True):
+    def like_tweet_from_hashtag(self, hashtag, rate_limit, print_tweets = True):
         query = '#'+str(hashtag)+' -is:retweet lang:en'
         tweets = client.search_recent_tweets(query=query, tweet_fields=['context_annotations', 'created_at'], max_results=rate_limit)
         for tweet in tweets.data:
@@ -26,7 +26,7 @@ class Twitter_Functions:
 
     #Function to make a tweet
     #@params tweet_text: text of tweet, hashtag_array: an array of hashtags to include
-    def make_tweet(tweet_text, hashtag_array = []):
+    def make_tweet(self, tweet_text, hashtag_array = []):
         full_tweet = tweet_text + ' ' + ' '.join(["#" + tag for tag in hashtag_array])
         if(client.create_tweet(text=full_tweet)):
             print("Tweet "+full_tweet+" has been sent successfully!")

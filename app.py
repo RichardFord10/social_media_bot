@@ -1,8 +1,9 @@
 import tweep as twitter
 import oai
+import numpy as np
 
 oai = oai.ChatGpt()
-
+twitter_bot = twitter.Twitter_Functions()
 
 while True:
     try:
@@ -30,10 +31,21 @@ while True:
                         print_tweets = str(input("Would you like to print the tweets being liked? Y/N: "))
             except:
                 print('Please Select a Valid Response')
-            twitter.Twitter_Functions.like_tweet_from_hashtag(hashtag, limit, print_tweets)
+            twitter_bot.like_tweet_from_hashtag(hashtag, limit, print_tweets)
             continue
         elif answer == 2:
-            
+            tweet = str(input("Enter the text for the hashtag you would like to create: "))
+            if(tweet != False):
+                if("#" in tweet):
+                    twitter_bot.make_tweet(tweet)
+                else:
+                    hashtag_string = str(input("Enter the hashtags you would like to include, seperated by spaces"))
+                    if(hashtag_string != False):
+                        hashtag_list = list(map(str, hashtag_string.split(' ')))
+                        hashtags = np.array(hashtag_list)
+                        twitter_bot.make_tweet(tweet, hashtags)
+            else:
+                print("Error Occured")                        
             continue
         elif answer == 3:
             
