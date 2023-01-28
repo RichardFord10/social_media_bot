@@ -13,7 +13,7 @@ class Twitter_Functions:
     #Function to like a set number of tweets based on a single hashtag
     #@params hashtag: the hashtag to search, rate_limit: the amount of tweets to like, print_tweets: print the liked tweets to the terminal
     def like_tweet_from_hashtag(hashtag, rate_limit, print_tweets = True):
-        query = '#'+hashtag+' -is:retweet lang:en'
+        query = '#'+str(hashtag)+' -is:retweet lang:en'
         tweets = client.search_recent_tweets(query=query, tweet_fields=['context_annotations', 'created_at'], max_results=rate_limit)
         for tweet in tweets.data:
             if len(tweet.context_annotations) > 0:
@@ -31,10 +31,3 @@ class Twitter_Functions:
         if(client.create_tweet(text=full_tweet)):
             print("Tweet "+full_tweet+" has been sent successfully!")
     
-
-gpt_prompt="Explain what you are, chatgpt, and then explain that youre being called from an automated python script"
-
-gpt_message = ai.ChatGpt().prompt(gpt_prompt)
-tweet = str(gpt_message) + " You can view my source code here--> "+project_url
-Twitter = Twitter_Functions()
-Twitter.make_tweet(tweet, ['programming', 'developement', 'tweepy', 'twitterapi', 'python', 'github', 'openai', 'chatgpt'])
