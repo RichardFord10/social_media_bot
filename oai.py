@@ -2,7 +2,7 @@
 import keys
 import openai
 
-openai.api_key = keys.openai
+openai.api_key = keys.openai_key
 
 class ChatGpt: 
 

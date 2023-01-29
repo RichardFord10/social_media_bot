@@ -7,11 +7,11 @@ twitter_bot = twitter.Twitter_Functions()
 
 while True:
     try:
-        answer = int(input("Choose function: \n1: Like Tweet by Hashtag  \n2: Create a tweet  \n3: \n4: \n5:\n6: \n\n\n"))
+        answer = int(input("Choose function: \n1: Like Tweet by Hashtag  \n2: Create a tweet  \n3: Rewtweet from hashtag \n4: Prompt ChatGPT and send tweet \n5: Follow users from hashtag \n6: \n\n\n"))
         if answer == 1:
-            hashtag = str(input("Enter the hashtag you want to like: "))
+            hashtag = str(input("Enter the hashtag you want to like:  "))
             while True:
-                limit = int(input("Enter a number between 1 & 100: "))
+                limit = int(input("Enter a number between 1 & 100:  "))
                 if(limit >= 1 and limit <= 100):
                     break
                 else:
@@ -48,12 +48,31 @@ while True:
                 print("Error Occured")                        
             continue
         elif answer == 3:
-            
+            hashtag = str(input("Enter the hashtag for the tweets you would like to search: "))
+            limit = int(input("Enter a number under 100 "))
+            twitter_bot.retweet_from_hashtag(hashtag, limit)
             continue
         elif answer == 4:
-            
-            continue
+            prompt = str(input("Enter your prompt for Chat GPT"))
+            gpt_prompt = oai.prompt(prompt)
+            send_tweet = str(input("Would you like to tweet the response? Y/N: "))
+            while send_tweet is not True or False:    
+                if send_tweet.lower() == 'y':
+                    send_tweet = True
+                    break
+                elif send_tweet.lower() == 'n':
+                    send_tweet = False
+                    break
+                else:
+                    print("Please enter either Y or N")
+                    send_tweet = str(input("Would you like to tweet the response? Y/N: "))
+                    continue
+            if(send_tweet != False):
+                twitter_bot.make_tweet(gpt_prompt)
         elif answer == 5:
+            hashtag = str(input("Enter the hashtag for the tweets you would like to search: "))
+            limit = int(input("Enter a number under 100 "))
+            twitter_bot.follow_from_hashtag(hashtag, limit)
             
             continue
         elif answer == 6:
