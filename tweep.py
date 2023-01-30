@@ -1,9 +1,9 @@
 import tweepy
 import keys
 import oai as ai
+import numpy as np
 
 client = tweepy.Client(bearer_token=keys.twitter_bearer, consumer_key=keys.twitter_api_key, consumer_secret=keys.twitter_api_secret, access_token=keys.twitter_access_token, access_token_secret=keys.twitter_access_token_secret, wait_on_rate_limit=True)
-project_url = r"https://github.com/RichardFord10/social_media_bot/"
 
 class Twitter_Functions:
     
@@ -59,9 +59,38 @@ class Twitter_Functions:
                     print(tweet.context_annotations)
                     print("\n\n")
 
+    # Function to prompt user for multiple hashtags
+    def prompt_for_hashtags(self):
+        try:    
+            hashtag_string = str(input("Enter the hashtags you would like to include, seperated by spaces: "))
+            if(hashtag_string != False):
+                hashtag_list = list(map(str, hashtag_string.split(' ')))
+                hashtags = np.array(hashtag_list)
+                return hashtags
+        except ValueError():
+            print("An Error has occured for hashtag prompt")
 
+    # Function to prompt user for one hashtags
+    def prompt_for_hashtag(self):
+        try:    
+            hashtag = str(input("Enter the hashtag you would like to utilize: "))
+            if(hashtag != False):
+                return hashtag
+        except ValueError():
+            print("An Error has occured for hashtag prompt")
 
+    #Function to get all Follower IDS
+    def get_all_follower_ids(self):
+        ids = []
+        followers = client.get_users_followers(keys.twitter_user_id)
+        for info in followers.data:
+            ids.append(info.id)
+        return ids    
 
-
-
-    
+    #Function to get all Following IDS
+    def get_all_following_ids(self):
+        ids = []
+        following = client.get_users_following(keys.twitter_user_id)
+        for info in following.data:
+            ids.append(info.id)
+        return ids    
