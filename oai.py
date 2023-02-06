@@ -10,16 +10,18 @@ class ChatGpt:
     pass
 
 
-  def prompt(self, chat_prompt):
+  def prompt(self, print_response = True):
+    text_prompt = str(input("Enter your prompt for Chat GPT: "))
     response = openai.Completion.create(
     engine="text-davinci-002",
-    prompt=chat_prompt,
+    prompt=text_prompt,
     temperature=0.5,
     max_tokens=256,
     top_p=1.0,
     frequency_penalty=0.0,
     presence_penalty=0.0)
-    
+    if(print_response):
+      print(response['choices'][0]['text'])
     return(response['choices'][0]['text'])
 
 
