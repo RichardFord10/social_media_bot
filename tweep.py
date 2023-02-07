@@ -1,17 +1,18 @@
-import tweepy
-import keys
-import oai as ai
-import numpy as np
+from config import *
+from gpt import ChatGpt
 
+
+auth = tweepy.OAuthHandler(keys.twitter_access_token, keys.twitter_access_token_secret)
 client = tweepy.Client(bearer_token=keys.twitter_bearer, consumer_key=keys.twitter_api_key, consumer_secret=keys.twitter_api_secret, access_token=keys.twitter_access_token, access_token_secret=keys.twitter_access_token_secret, wait_on_rate_limit=True)
+api = tweepy.API(auth)
+api.verify_credentials()
+project_url = keys.project_url
+FILE_NAME = 'previous_interactions.txt'
 
 class Twitter_Functions:
     
     def __init__(self):
         pass
-
-    project_url = r"https://github.com/RichardFord10/social_media_bot/"
-
 
     #Function to make a tweet
     #@params tweet_text: text of tweet, hashtag_array: an array of hashtags to include
@@ -21,14 +22,14 @@ class Twitter_Functions:
             print("Tweet "+full_tweet+" has been sent successfully!")
     
     #Function to make a tweet
-    def make_tweet():
+    def make_tweet(self):
         while True:
             try:
                 include_source = str(input("Would you like to include the source code link? Y/N: "))
                 tweet = str(input("Enter the text for the tweet you would like to create: "))
                 if(tweet != False):
                     if(include_source.lower() == "y"):
-                        source_text = " You can view my source code here --->" + project_url
+                        source_text = " You can view my source code here --->" + self.project_url
                         if("#" in tweet):
                             self._make_tweet(tweet + source_text)
                         else:
@@ -38,7 +39,7 @@ class Twitter_Functions:
                         if("#" in tweet):
                             self.make_tweet(tweet + source_text)
                         else:
-                            hashtags = twitter_bot.prompt_for_hashtags()
+                            hashtags = self.prompt_for_hashtags()
                             self._make_tweet(tweet, hashtags)
             except ValueError:
                 print("Error Occured")
@@ -49,7 +50,7 @@ class Twitter_Functions:
         hashtag = str(input("Enter the hashtag for the tweets you would like to search: "))
         limit = int(input("Enter a number under 100 "))
         query = '#'+str(hashtag)+' -is:retweet lang:en'
-        tweets = client.search_recent_tweets(query=query, tweet_fields=['context_annotations', 'created_at'], max_results=rate_limit)
+        tweets = client.search_recent_tweets(query=query, tweet_fields=['context_annotations', 'created_at'], max_results=limit)
         for tweet in tweets.data:
             if len(tweet.context_annotations) > 0:
                     client.retweet(tweet.id)
@@ -78,6 +79,7 @@ class Twitter_Functions:
         followers = self.get_all_following_ids()
         for follower in followers:
             client.unfollow_user(follower)
+            print("Unfollowed user with id " + str(follower))
 
     # Function to prompt user for multiple hashtags
     def prompt_for_hashtags(self):
@@ -90,7 +92,7 @@ class Twitter_Functions:
         except ValueError():
             print("An Error has occured for hashtag prompt")
 
-    # Function to prompt user for one hashtags
+    # Function to prompt user for one hashtag
     def prompt_for_hashtag(self):
         try:    
             hashtag = str(input("Enter the hashtag you would like to utilize: "))
@@ -131,8 +133,8 @@ class Twitter_Functions:
                     client.like(tweet.id)
 
     #Function to like a set number of tweets based on a single hashtag
-    def like_tweet_from_hashtag():
-        hashtag = twitter_bot.prompt_for_hashtag()
+    def like_tweet_from_hashtag(self):
+        hashtag = self.prompt_for_hashtag()
         while True:
             limit = int(input("Enter a number between 1 & 100:  "))
             if(limit >= 1 and limit <= 100):
@@ -145,19 +147,18 @@ class Twitter_Functions:
             while print_tweets is not True or False:    
                 if print_tweets.lower() == 'y':
                     print_tweets = True
+                    self._like_tweet_from_hashtag(hashtag, limit, print_tweets)
                     break
                 elif print_tweets.lower() == 'n':
                     print_tweets = False
+                    self._like_tweet_from_hashtag(hashtag, limit, print_tweets)
                     break
                 else:
                     print("Please enter either Y or N")
                     print_tweets = str(input("Would you like to print the tweets being liked? Y/N: "))
         except:
             print('Please Select a Valid Response')
-            self._like_tweet_from_hashtag(hashtag, limit, print_tweets)
         
-
-
     # Function to prompt user to tweet out a prompt returned from the ChatGPT Class
     def prompt_for_gpt_tweet(self, prompt):
         send_tweet = str(input("Would you like to tweet the response? Y/N: "))
@@ -181,17 +182,79 @@ class Twitter_Functions:
             while hashtag is not True or False:
                 if hashtag.lower() == 'y':
                     hashtag = True
-                    hashtags = twitter_bot.prompt_for_hashtags()
+                    hashtags = self.prompt_for_hashtags()
                     break
                 elif hashtag.lower() == 'n':
                     hashtag = False
                     break
             if(prefix):
                 if(hashtag):
-                    twitter_bot.make_tweet(prefix_text + "  " + gpt_prompt, hashtags)
+                    self.make_tweet(prefix_text + "  " + prompt, hashtags)
                 else:
-                    twitter_bot.make_tweet(prefix_text + "  " + gpt_prompt)
+                    self.make_tweet(prefix_text + "  " + prompt)
             elif(hashtag):
-                twitter_bot.make_tweet(gpt_prompt, hashtags)
+                self.make_tweet(prompt, hashtags)
             else:
-                twitter_bot.make_tweet(gpt_prompt)
+                self.make_tweet(prompt)
+
+    # Unfollow All Users not in your follower list
+    def unfollow_users_not_following(self):
+        followers = self.get_all_follower_ids()
+        following = self.get_all_following_ids()
+        for follower in following:
+            if follower not in followers:
+                client.unfollow_user(follower)
+
+    # get recent trends in USA
+    def get_trends(self):
+        loc = "United States"
+        # Object that has location's latitude and longitude.
+        g = geocoder.osm(loc)
+        closest_loc = api.closest_trends(g.lat, g.lng)
+        trends = api.get_place_trends(closest_loc[0]["woeid"])
+        trends = trends[0]["trends"]
+        hashtags = [trend["name"] for trend in trends]
+        return hashtags
+
+    # prompt chatGPT for a random tweet about trending topics
+    def generate_random_trending_tweets(self):
+        trends = self.get_trends()
+        prompt = "Write a tweet about " + random.choice(trends) + "use the subject as a hashtag"
+        response = ChatGpt.prompt(self, prompt)
+        self._make_tweet(response)
+
+
+    # function to reply to mentions
+    def reply_to_mentions(self):
+        tweets = api.mentions_timeline(
+            since_id=self.read_last_seen(FILE_NAME), tweet_mode='extended')
+        # reversed tweets because bot read the most recent tweet down but we want the most recent last to get ID
+        for tweet in reversed(tweets):
+            print(str(tweet.id) + '  - ' + tweet.full_text)
+            prompt = "reply to this tweet with strictly 240 characters or less only: " + tweet.full_text
+            completion = ChatGpt.prompt(prompt)
+            # Reply to the mention
+            reply = '@' + tweet.user.screen_name + completion.choices[0].text
+            api.update_status(status=reply, in_reply_to_status_id=tweet.id)
+            self.store_last_seen(FILE_NAME, tweet.id)
+    
+
+    # read last seen tweets
+    def read_last_seen(self, FILE_NAME):
+        if(os.stat(FILE_NAME).st_size != 0):
+            with open(FILE_NAME, 'r') as read_file:
+                last_seen_id = int(read_file.read().strip())
+                read_file.close()
+                return last_seen_id
+    
+    # read last seen tweets
+    def store_last_seen(self, FILE_NAME, last_seen_id):
+        with open(FILE_NAME, 'w') as write_file:
+            write_file.write(str(last_seen_id))
+            write_file.close()
+        return
+    
+    
+    
+    
+    

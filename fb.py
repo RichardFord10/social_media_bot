@@ -1,6 +1,4 @@
-import facebook
-import keys
-import requests
+from config import *
 
 #In progress, not currently working
 msg = 'Testing 123'
