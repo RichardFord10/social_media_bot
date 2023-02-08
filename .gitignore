@@ -1,7 +1,4 @@
-__pycache__/keys.cpython-310.pyc
+__pycache__/*
 keys.py
-__pycache__/gpt.cpython-310.pyc
 .gitignore
-__pycache__/openai.cpython-310.pyc
-__pycache__/oai.cpython-310.pyc
 previous_interactions.csv

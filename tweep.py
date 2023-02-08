@@ -2,10 +2,9 @@ from config import *
 from gpt import ChatGpt
 
 
-auth = tweepy.OAuth2BearerHandler(keys.twitter_bearer)
 client = tweepy.Client(bearer_token=keys.twitter_bearer, consumer_key=keys.twitter_api_key, consumer_secret=keys.twitter_api_secret, access_token=keys.twitter_access_token, access_token_secret=keys.twitter_access_token_secret, wait_on_rate_limit=True)
+auth = tweepy.OAuth2BearerHandler(keys.twitter_bearer)
 api = tweepy.API(auth)
-# api.verify_credentials()
 project_url = keys.project_url
 FILE_NAME = 'previous_interactions.csv'
 
@@ -46,16 +45,13 @@ class Twitter_Functions:
 
     #Function to retweet set number of tweets based on a single hashtag
     #@params hashtag: the hashtag to search, rate_limit: the amount of tweets to like, print_tweets: print the liked tweets to the terminal
-    def retweet_from_hashtag(self):
-        hashtag = str(input("Enter the hashtag for the tweets you would like to search: "))
-        limit = int(input("Enter a number under 100 "))
+    def retweet_from_hashtag(self, hashtag, limit):
         query = '#'+str(hashtag)+' -is:retweet lang:en'
         tweets = client.search_recent_tweets(query=query, tweet_fields=['context_annotations', 'created_at'], max_results=limit)
         for tweet in tweets.data:
             if len(tweet.context_annotations) > 0:
                     client.retweet(tweet.id)
-                    print("Tweet with ID:"+str(tweet.id)+" liked")
-                    print(tweet.context_annotations)
+                    print("Retweeted: " + tweet.text)
                     print("\n\n")
 
     #Function to follow a set number of users based on a single hashtag
@@ -66,9 +62,9 @@ class Twitter_Functions:
         for tweet in tweets.data:
             if len(tweet.context_annotations) > 0:
                     client.like(tweet.id)
-                    client.follow_user(tweet.author_id)
-                    print("User id: "+str(tweet.author_id)+" followed")
-                    print(tweet.context_annotations)
+                    # client.follow_user(tweet.author_id)
+                    # print("User id: "+str(tweet.author_id)+" followed")
+                    print("Liked Tweet:  " +  tweet.text)
                     print("\n\n")
     
     #Function to unfollow users 
@@ -217,9 +213,10 @@ class Twitter_Functions:
     # prompt chatGPT for a random tweet about trending topics
     def generate_random_trending_tweets(self):
         trends = self.get_trends()
-        prompt = "Write a tweet about " + random.choice(trends) + "use the subject as a hashtag"
+        tag = random.choice(trends)
+        prompt = "Write a tweet about " + tag
         response = ChatGpt.prompt(self, prompt)
-        self._make_tweet(response)
+        self._make_tweet(response.strip() + " #"+tag.replace(" ", ""))
 
     # function to reply to mentions
     def reply_to_mentions(self):

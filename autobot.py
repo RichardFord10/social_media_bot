@@ -4,14 +4,15 @@ from gpt import ChatGpt
 
 hashtags = Twitter_Functions().get_trends()
 
-
 while True:
    try:
+      hashtag = random.choice(hashtags)
       Twitter_Functions().generate_random_trending_tweets()
-      for hashtag in hashtags:
-         Twitter_Functions().like_and_follow_from_hashtag(hashtag, 15)
-      time.sleep(900)
-   except tweepy.TweepError:
+      Twitter_Functions().like_and_follow_from_hashtag(hashtag, 10)
+      Twitter_Functions().retweet_from_hashtag(hashtag, 10)
+      time.sleep(350)
+   except tweepy.errors.TweepyException as e:
+      print(e)
       time.sleep(100)
       continue
 
