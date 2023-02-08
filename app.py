@@ -4,10 +4,8 @@ from gpt import ChatGpt
 
 Twitter_Functions().reply_to_mentions()
 
-# If we are running via cron go autopilot
 if(sys.stdout.isatty()):
-    #TODO AUTOPILOT
-    pass
+    import autobot
 # else manual
 else:
     while True:
