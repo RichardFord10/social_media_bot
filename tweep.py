@@ -2,12 +2,12 @@ from config import *
 from gpt import ChatGpt
 
 
-auth = tweepy.OAuthHandler(keys.twitter_access_token, keys.twitter_access_token_secret)
+auth = tweepy.OAuth2BearerHandler(keys.twitter_bearer)
 client = tweepy.Client(bearer_token=keys.twitter_bearer, consumer_key=keys.twitter_api_key, consumer_secret=keys.twitter_api_secret, access_token=keys.twitter_access_token, access_token_secret=keys.twitter_access_token_secret, wait_on_rate_limit=True)
 api = tweepy.API(auth)
-api.verify_credentials()
+# api.verify_credentials()
 project_url = keys.project_url
-FILE_NAME = 'previous_interactions.txt'
+FILE_NAME = 'previous_interactions.csv'
 
 class Twitter_Functions:
     
@@ -60,11 +60,9 @@ class Twitter_Functions:
 
     #Function to follow a set number of users based on a single hashtag
     #@params hashtag: the hashtag to search, rate_limit: the amount of tweets to like, print_tweets: print the liked tweets to the terminal
-    def follow_from_hashtag(self):
-        hashtag = self.prompt_for_hashtag()
-        rate_limit = int(input("Enter a number under 100 "))
+    def like_and_follow_from_hashtag(self, hashtag, limit):
         query = '#'+str(hashtag)+' -is:retweet lang:en'
-        tweets = client.search_recent_tweets(query=query, tweet_fields=['context_annotations', 'created_at', 'author_id'], max_results=rate_limit)
+        tweets = client.search_recent_tweets(query=query, tweet_fields=['context_annotations', 'created_at', 'author_id'], max_results=limit)
         for tweet in tweets.data:
             if len(tweet.context_annotations) > 0:
                     client.like(tweet.id)
@@ -223,27 +221,28 @@ class Twitter_Functions:
         response = ChatGpt.prompt(self, prompt)
         self._make_tweet(response)
 
-
     # function to reply to mentions
     def reply_to_mentions(self):
-        tweets = api.mentions_timeline(
-            since_id=self.read_last_seen(FILE_NAME), tweet_mode='extended')
-        # reversed tweets because bot read the most recent tweet down but we want the most recent last to get ID
-        for tweet in reversed(tweets):
-            print(str(tweet.id) + '  - ' + tweet.full_text)
-            prompt = "reply to this tweet with strictly 240 characters or less only: " + tweet.full_text
-            completion = ChatGpt.prompt(prompt)
-            # Reply to the mention
-            reply = '@' + tweet.user.screen_name + completion.choices[0].text
-            api.update_status(status=reply, in_reply_to_status_id=tweet.id)
-            self.store_last_seen(FILE_NAME, tweet.id)
-    
+        tweets = client.get_users_mentions(keys.twitter_user_id, since_id=self.read_last_seen(FILE_NAME), expansions="author_id")
+        users = tweets.includes['users']
+        tweets = tweets.data
+        usernames = [user['username'] for user in users]
+        for tweet in tweets:
+            if usernames:
+                tweet_id = str(tweet.id)
+                prompt = "reply to this tweet with less than 240 characters and be nice about it: " + tweet.text
+                completion = ChatGpt().prompt(prompt)
+                # Reply to the mention
+                reply = '@' + usernames[0] + completion
+                usernames.pop(0)
+                self._make_tweet(reply)
+                self.store_last_seen(FILE_NAME, tweet_id)
 
     # read last seen tweets
     def read_last_seen(self, FILE_NAME):
         if(os.stat(FILE_NAME).st_size != 0):
             with open(FILE_NAME, 'r') as read_file:
-                last_seen_id = int(read_file.read().strip())
+                last_seen_id = str(read_file.read().strip())
                 read_file.close()
                 return last_seen_id
     
