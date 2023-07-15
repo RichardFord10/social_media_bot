@@ -11,3 +11,6 @@ import random
 import json
 import os
 import time
+from gtts import gTTS
+from playsound import playsound
+

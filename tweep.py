@@ -219,21 +219,21 @@ class Twitter_Functions:
         self._make_tweet(response.strip() + " #"+tag.replace(" ", ""))
 
     # function to reply to mentions
-    def reply_to_mentions(self):
-        tweets = client.get_users_mentions(keys.twitter_user_id, since_id=self.read_last_seen(FILE_NAME), expansions="author_id")
-        users = tweets.includes['users']
-        tweets = tweets.data
-        usernames = [user['username'] for user in users]
-        for tweet in tweets:
-            if usernames:
-                tweet_id = str(tweet.id)
-                prompt = "reply to this tweet with less than 240 characters and be nice about it: " + tweet.text
-                completion = ChatGpt().prompt(prompt)
-                # Reply to the mention
-                reply = '@' + usernames[0] + completion
-                usernames.pop(0)
-                self._make_tweet(reply)
-                self.store_last_seen(FILE_NAME, tweet_id)
+    # def reply_to_mentions(self):
+    #     tweets = client.get_users_mentions(keys.twitter_user_id, since_id=self.read_last_seen(FILE_NAME), expansions="author_id")
+    #     users = tweets.includes['users']
+    #     tweets = tweets.data
+    #     usernames = [user['username'] for user in users]
+    #     for tweet in tweets:
+    #         if usernames:
+    #             tweet_id = str(tweet.id)
+    #             prompt = "reply to this tweet with less than 240 characters and be nice about it: " + tweet.text
+    #             completion = ChatGpt().prompt(prompt)
+    #             # Reply to the mention
+    #             reply = '@' + usernames[0] + completion
+    #             usernames.pop(0)
+    #             self._make_tweet(reply)
+    #             self.store_last_seen(FILE_NAME, tweet_id)
 
     # read last seen tweets
     def read_last_seen(self, FILE_NAME):
